@@ -29,8 +29,8 @@ jobs:
       run: |
         cd backend
         docker build -t tienda-backend .
-        docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
-        docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+        docker tag tienda-backend:v1${{ secrets.ECR_REPO_URL_BACKEND }}:v1
+        docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:v1
 
     - name: Desplegar Backend vía SSM
       run: |
@@ -41,9 +41,9 @@ jobs:
           --parameters '{"commands":[
             "set -e",
             "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-            "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
+            "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:v1",
             "docker stop tienda-backend || true",
             "docker rm tienda-backend || true",
-            "docker run -d --name tienda-backend -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
+            "docker run -d --name tienda-backend -p 3001:3001 ${{ secrets.ECR_REPO_URL_BACKEND }}:v1"
           ]}' \
           --output text
