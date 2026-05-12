@@ -1,49 +1,56 @@
-name: CI/CD Tienda Perritos - Backend
+name: CI/CD Backend
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
     paths:
-      - "backend/**"
+      - 'backend/**'
 
 jobs:
-  build-push-deploy-backend:
+  build-push-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout código
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Configurar credenciales AWS
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configurar AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Login en Amazon ECR (runner)
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Login Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Build imagen Backend y push a ECR
-      run: |
-        cd backend
-        docker build -t tienda-backend .
-        docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
-        docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+      - name: Build Docker Image
+        run: |
+          cd backend
+          docker build -t tienda-backend .
+          docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
 
-    - name: Desplegar Backend vía SSM
-      run: |
-        aws ssm send-command \
-          --instance-ids ${{ secrets.EC2_BACKEND_INSTANCE_ID }} \
-          --document-name "AWS-RunShellScript" \
-          --comment "Actualizar tienda-backend desde ECR" \
-          --parameters '{"commands":[
-            "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-            "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
-            "docker stop tienda-backend || true",
-            "docker rm tienda-backend || true",
-            "docker run -d --name tienda-backend -p 3001:3001 -e DB_HOST=${{ secrets.EC2_DB_HOST }} -e DB_USER=alumno -e DB_PASSWORD=alumno123 -e DB_NAME=tienda_perritos -e DB_PORT=3306 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
-          ]}' \
-          --output text
+      - name: Push Image to ECR
+        run: |
+          docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+
+      - name: Deploy Backend in EC2
+        run: |
+          aws ssm send-command \
+            --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy Backend" \
+            --parameters '{
+              "commands": [
+                "sudo docker stop tienda-backend || true",
+                "sudo docker rm tienda-backend || true",
+                "sudo docker image prune -af",
+                "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | sudo docker login --username AWS --password-stdin '${{ secrets.ECR_REGISTRY }}'",
+                "sudo docker pull '${{ secrets.ECR_REPO_URL_BACKEND }}:latest'",
+                "sudo docker network create tienda-network || true",
+                "sudo docker run -d --restart unless-stopped --name tienda-backend --network tienda-network -p 3001:3001 -e DB_HOST='${{ secrets.DB_HOST }}' -e DB_USER='${{ secrets.DB_USER }}' -e DB_PASSWORD='${{ secrets.DB_PASSWORD }}' -e DB_NAME='${{ secrets.DB_NAME }}' -e DB_PORT='${{ secrets.DB_PORT }}' '${{ secrets.ECR_REPO_URL_BACKEND }}:latest'",
+                "sudo docker ps"
+              ]
+            }' \
+            --region "${{ secrets.AWS_REGION }}"
