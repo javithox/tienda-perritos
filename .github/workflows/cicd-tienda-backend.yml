@@ -22,21 +22,33 @@ jobs:
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Login en Amazon ECR (runner)
+    - name: Login en Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
 
     - name: Build imagen Backend y push a ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.ECR_REPO_URL_BACKEND }}
+        IMAGE_TAG: latest
       run: |
         cd backend
-        docker build -t tienda-backend .
-        docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
-        docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
-    - name: Tag image
+    - name: Desplegar Backend vía SSM
       run: |
-        docker tag $ECR_REPOSITORY:latest ${{ steps.login-ecr.outputs.registry }} $ECR_REPOSITORY:latest
-
-    - name: Push image
-      run: |
-        docker push ${{ steps.login-ecr.outputs.registry }} $ECR_REPOSITORY:latest
+        aws ssm send-command \
+          --instance-ids ${{ secrets.EC2_BACKEND_INSTANCE_ID }} \
+          --document-name "AWS-RunShellScript" \
+          --comment "Actualizar tienda-backend desde ECR" \
+          --parameters '{"commands":[
+            "set -e",
+            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+            "docker pull ${{ env.IMAGE_URI }}",
+            "docker stop tienda-backend || true",
+            "docker rm tienda-backend || true",
+            "docker run -d --name tienda-backend -p 3000:3000 ${{ env.IMAGE_URI }}"
+          ]}' \
+          --output text
