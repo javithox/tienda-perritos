@@ -32,5 +32,3 @@ jobs:
         docker build -t tienda-frontend .
         docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
-
-    # Removed redundant Tag/Push steps — image is already tagged and pushed above using secrets.ECR_REPO_URL_FRONTEND
