@@ -22,6 +22,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
           aws-session-token: IQoJb3JpZ2luX2VjEGsaCXVzLXdlc3QtMiJHMEUCIQCUgOdJ+XUR5rRyj992ilJYSQKhKnHZrniiP2T0WsFK1QIgSRSg5fMN43msHLpeeu331GLWrHslWQ+EQE3r2RRf954qrwIINBABGgwwNzY1MDI0NDcyODIiDCY5BkYUqCOoxMpbHCqMAu9chOB/3xMLEXzH8svXSq83wLyu+oI17kH1cMszzIKTuZnor96QePMf3MdNL43bgP3UjdFA6zsfHZisvMtazGT5pcwt3IPEiEOkBk13yfFh0+GtUkhXiMXDw2UEr5Fz7U//X1sS4P8vwyaNAgb5ZQMXSUGxsf7hFEjOvoHkEp0/gQ+gUmHUi9NLL/nGxj68UlxLyp5xTh0vXSfmeC5dN8Kkcaj9smFAfN/mmdwV6la9Iy7/NJnn6umoVXxsX3pGiqwDfoE89Q8v1MCDknOh7LBv3+oXDzAeqGRZX80jfSJxKcNg3s7H6ipkasTtIXKlSkszWt/2UoDnCOESeoL836TI6AFJruCM0OJVxLIwoe+N0AY6nQHtOZLQGZ9oC5T2rD91mQpdUYu1H0nBqGbrVY912YfyYm/FDT7XTv5EOB9sxmdID65nZerPyh3ktp4hVhN14kNKEbRJ55NN339wKxBbImw5n8QhAcn5hwOrwOKXV/ZfIRSmllT9pbUozrkUzVzJPZkC+39LEF5jrT0zd0VO4uhaF2/7G1iDynlHtR6E7PUsPsT9R/ax0DDghqmWdbQ3
+          audience: sts.amazonaws.com
+          output-env-credentials: true
 
       - name: Login en Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
