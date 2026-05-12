@@ -29,8 +29,8 @@ jobs:
       run: |
         cd db
         docker build -t tienda-db .
-        docker tag tienda-db:v1 ${{ secrets.ECR_REPO_URL_DB }}:v1
-        docker push ${{ secrets.ECR_REPO_URL_DB }}:v1
+        docker tag tienda-db:latest ${{ secrets.ECR_REPO_URL_DB }}:latest
+        docker push ${{ secrets.ECR_REPO_URL_DB }}:latest
 
     - name: Desplegar DB vía SSM
       run: |
@@ -41,9 +41,9 @@ jobs:
           --parameters '{"commands":[
             "set -e",
             "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-            "docker pull ${{ secrets.ECR_REPO_URL_DB }}:v1",
+            "docker pull ${{ secrets.ECR_REPO_URL_DB }}:latest",
             "docker stop tienda-db || true",
             "docker rm tienda-db || true",
-            "docker run -d --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql ${{ secrets.ECR_REPO_URL_DB }}:v1"
+            "docker run -d --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=admin123 -e MYSQL_DATABASE=tienda_perritos -e MYSQL_USER=alumno -e MYSQL_PASSWORD=alumno123 ${{ secrets.ECR_REPO_URL_DB }}:latest"
           ]}' \
           --output text
