@@ -1,5 +1,4 @@
-name: CI/CD Tienda Perritos - DB
-
+name: CI/CD Tienda-DB
 on:
   push:
     branches: [ "main" ]
