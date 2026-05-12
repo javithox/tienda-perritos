@@ -40,18 +40,22 @@ jobs:
 
       - name: Desplegar Backend vía SSM
         run: |
-          aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Actualizar tienda-perritos-backend desde ECR" \
-            --parameters '{
-              "commands":[
-                "set -e",
-                "docker stop tienda-perritos-backend || true",
-                "docker rm tienda-perritos-backend || true",
-                "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-                "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
-                "docker run -d --restart unless-stopped --name tienda-perritos-backend -p 3001:3001 -e DB_HOST=${{ secrets.EC2_DB_HOST }} -e DB_USER=alumno -e DB_PASSWORD=alumno123 -e DB_NAME=tienda_perritos -e DB_PORT=3306 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
-              ]
-            }' \
-            --output text
+              AWS_REGION="${{ secrets.AWS_REGION }}"
+              ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
+              ECR_REPO_URL_FRONTEND="${{ secrets.ECR_REPO_URL_FRONTEND }}"
+              EC2_BACKEND_URL="${{ secrets.EC2_BACKEND_URL }}"
+              ECR_REPO_URL_BACKEND="${{ secrets.ECR_REPO_URL_BACKEND }}"
+              --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
+              --document-name "AWS-RunShellScript" \
+              --comment "Actualizar tienda-perritos-backend desde ECR" \
+              --parameters '{
+                "commands":[
+                  "set -e",
+                  "docker stop tienda-perritos-backend || true",
+                  "docker rm tienda-perritos-backend || true",
+                  "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+                  "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
+                  "docker run -d --restart unless-stopped --name tienda-perritos-backend -p 3001:3001 -e DB_HOST=${{ secrets.EC2_DB_HOST }} -e DB_USER=alumno -e DB_PASSWORD=alumno123 -e DB_NAME=tienda_perritos -e DB_PORT=3306 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
+                ]
+              }' \
+              --output text

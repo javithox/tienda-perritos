@@ -37,7 +37,12 @@ jobs:
 
       - name: Deploy DB in EC2
         run: |
-          aws ssm send-command \
+            AWS_REGION="${{ secrets.AWS_REGION }}"
+            ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
+            ECR_REPO_URL_FRONTEND="${{ secrets.ECR_REPO_URL_FRONTEND }}"
+            EC2_BACKEND_URL="${{ secrets.EC2_BACKEND_URL }}"
+            ECR_REPO_URL_DB="${{ secrets.ECR_REPO_URL_DB }}"
+            aws ssm send-command \
             --instance-ids "${{ secrets.EC2_DB_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy tienda-perritos-db" \

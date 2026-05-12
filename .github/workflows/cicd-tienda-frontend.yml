@@ -40,11 +40,15 @@ jobs:
 
       - name: Desplegar Frontend vía SSM
         run: |
-          aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_FRONTEND_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Actualizar tienda-perritos-frontend desde ECR" \
-            --parameters '{
+              AWS_REGION="${{ secrets.AWS_REGION }}"
+              ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
+              ECR_REPO_URL_FRONTEND="${{ secrets.ECR_REPO_URL_FRONTEND }}"
+              EC2_BACKEND_URL="${{ secrets.EC2_BACKEND_URL }}"
+              aws ssm send-command \
+              --instance-ids "${{ secrets.EC2_FRONTEND_INSTANCE_ID }}" \
+               --document-name "AWS-RunShellScript" \
+               --comment "Actualizar tienda-perritos-frontend desde ECR" \
+               --parameters '{
               "commands":[
                 "set -e",
                 "docker stop tienda-perritos-frontend || true",
@@ -53,5 +57,5 @@ jobs:
                 "docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
                 "docker run -d --restart unless-stopped --name tienda-perritos-frontend -p 80:80 -e BACKEND_URL=${{ secrets.EC2_BACKEND_URL }} ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest"
               ]
-            }' \
-            --output text
+              }' \
+              --output text
