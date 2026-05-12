@@ -36,7 +36,7 @@ jobs:
 
       - name: Push imagen Frontend
         run: |
-          docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+          docker push tienda-perritos-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
       - name: Desplegar Frontend vía SSM
         run: |
