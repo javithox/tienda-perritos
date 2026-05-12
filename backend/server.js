@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 /* ejemplo*/
 const {
-  DB_HOST = "host.docker.internal", // Para Docker Desktop (Windows/Mac)
+  DB_HOST = "10.0.147.127", // Para Docker Desktop (Windows/Mac)
   DB_USER = "alumno",
   DB_PASSWORD = "alumno123",
   DB_NAME = "tienda_perritos",
