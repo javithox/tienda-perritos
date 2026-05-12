@@ -28,15 +28,15 @@ jobs:
       - name: Build imagen Frontend
         run: |
           cd frontend
-          docker build -t tienda-perritos-frontend:latest .
+          docker build -t tienda-frontend:latest .
 
       - name: Tag imagen Frontend
         run: |
-          docker tag tienda-perritos-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+          docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
       - name: Push imagen Frontend
         run: |
-          docker push tienda-perritos-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+          docker push tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
       - name: Desplegar Frontend vía SSM
         run: |
