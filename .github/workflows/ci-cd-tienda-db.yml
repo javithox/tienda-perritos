@@ -23,6 +23,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Login en Amazon ECR (runner)
+      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build imagen DB y push a ECR

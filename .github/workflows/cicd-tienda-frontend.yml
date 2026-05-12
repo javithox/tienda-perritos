@@ -23,6 +23,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Login en Amazon ECR (runner)
+      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build imagen Frontend y push a ECR
@@ -32,12 +33,4 @@ jobs:
         docker tag tienda-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
 
-    - name: Tag image
-      run: |
-        docker tag $ECR_REPOSITORY:latest \
-        ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
-
-    - name: Push image
-      run: |
-        docker push \
-        ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
+    # Removed redundant Tag/Push steps — image is already tagged and pushed above using secrets.ECR_REPO_URL_FRONTEND
