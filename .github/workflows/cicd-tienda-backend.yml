@@ -32,12 +32,12 @@ jobs:
         docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
 
-      - name: Tag image
-        run: |
-          docker tag $ECR_REPOSITORY:latest \
-          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
+    - name: Tag image
+      run: |
+        docker tag $ECR_REPOSITORY:latest \
+        ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
 
-      - name: Push image
-        run: |
-          docker push \
-          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
+    - name: Push image
+      run: |
+        docker push \
+        ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
