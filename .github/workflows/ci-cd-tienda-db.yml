@@ -24,7 +24,7 @@ jobs:
 
     - name: Login en Amazon ECR (runner)
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
 
     - name: Build imagen DB y push a ECR
       run: |
