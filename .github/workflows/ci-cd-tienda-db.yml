@@ -28,12 +28,12 @@ jobs:
       - name: Build Docker Image
         run: |
           cd db
-          docker build -t tienda-perritos-db .
+          docker build -t tienda-perritos-db:latest .
           docker tag tienda-perritos-db:latest ${{ secrets.ECR_REPO_URL_DB }}:latest
 
       - name: Push Image to ECR
         run: |
-          docker push ${{ secrets.ECR_REPO_URL_DB }}:latest
+          docker push tienda-perritos-db:latest ${{ secrets.ECR_REPO_URL_DB }}:latest
 
       - name: Deploy DB in EC2
         run: |

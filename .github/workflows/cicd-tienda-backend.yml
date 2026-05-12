@@ -36,7 +36,7 @@ jobs:
 
       - name: Push imagen Backend
         run: |
-          docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+          docker push tienda-perritos-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
 
       - name: Desplegar Backend vía SSM
         run: |
