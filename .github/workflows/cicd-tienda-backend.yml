@@ -33,9 +33,6 @@ jobs:
         docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
         docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
 
-<<<<<<< HEAD
-    # Removed redundant Tag/Push steps — image is already tagged and pushed above using secrets.ECR_REPO_URL_BACKEND
-=======
     - name: Tag image
       run: |
         docker tag $ECR_REPOSITORY:latest ${{ steps.login-ecr.outputs.registry }} $ECR_REPOSITORY:latest
@@ -43,4 +40,3 @@ jobs:
     - name: Push image
       run: |
         docker push ${{ steps.login-ecr.outputs.registry }} $ECR_REPOSITORY:latest
->>>>>>> c45509b6ef34b918462a690348e9125b54350389
