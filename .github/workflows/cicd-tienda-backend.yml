@@ -42,7 +42,6 @@ jobs:
         run: |
               AWS_REGION="${{ secrets.AWS_REGION }}"
               ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
-              ECR_REPO_URL_FRONTEND="${{ secrets.ECR_REPO_URL_FRONTEND }}"
               EC2_BACKEND_URL="${{ secrets.EC2_BACKEND_URL }}"
               ECR_REPO_URL_BACKEND="${{ secrets.ECR_REPO_URL_BACKEND }}"
               --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
