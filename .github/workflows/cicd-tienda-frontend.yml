@@ -1,63 +1,47 @@
-name: CI/CD Tienda Perritos - Frontend
+name: Frontend CI/CD
 
 on:
   push:
     branches:
       - main
     paths:
-      - "frontend/**"
+      - 'frontend/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: tienda-perritos-frontend
 
 jobs:
-  build-push-deploy-frontend:
+  frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Configurar credenciales AWS
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-session-token: IQoJb3JpZ2luX2VjEGsaCXVzLXdlc3QtMiJHMEUCIQCUgOdJ+XUR5rRyj992ilJYSQKhKnHZrniiP2T0WsFK1QIgSRSg5fMN43msHLpeeu331GLWrHslWQ+EQE3r2RRf954qrwIINBABGgwwNzY1MDI0NDcyODIiDCY5BkYUqCOoxMpbHCqMAu9chOB/3xMLEXzH8svXSq83wLyu+oI17kH1cMszzIKTuZnor96QePMf3MdNL43bgP3UjdFA6zsfHZisvMtazGT5pcwt3IPEiEOkBk13yfFh0+GtUkhXiMXDw2UEr5Fz7U//X1sS4P8vwyaNAgb5ZQMXSUGxsf7hFEjOvoHkEp0/gQ+gUmHUi9NLL/nGxj68UlxLyp5xTh0vXSfmeC5dN8Kkcaj9smFAfN/mmdwV6la9Iy7/NJnn6umoVXxsX3pGiqwDfoE89Q8v1MCDknOh7LBv3+oXDzAeqGRZX80jfSJxKcNg3s7H6ipkasTtIXKlSkszWt/2UoDnCOESeoL836TI6AFJruCM0OJVxLIwoe+N0AY6nQHtOZLQGZ9oC5T2rD91mQpdUYu1H0nBqGbrVY912YfyYm/FDT7XTv5EOB9sxmdID65nZerPyh3ktp4hVhN14kNKEbRJ55NN339wKxBbImw5n8QhAcn5hwOrwOKXV/ZfIRSmllT9pbUozrkUzVzJPZkC+39LEF5jrT0zd0VO4uhaF2/7G1iDynlHtR6E7PUsPsT9R/ax0DDghqmWdbQ3
-          audience: sts.amazonaws.com
-          output-env-credentials: true
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login en Amazon ECR
+      - name: Login ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build imagen Frontend
+      - name: Build frontend image
         run: |
-          cd frontend
-          docker build -t tienda-perritos-frontend:latest .
+          docker build -t $ECR_REPOSITORY ./frontend
 
-      - name: Tag imagen Frontend
+      - name: Tag image
         run: |
-          docker tag tienda-perritos-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
-      - name: Push imagen Frontend
-        run: |
-          docker push tienda-perritos-frontend:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+          docker tag $ECR_REPOSITORY:latest \
+          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
 
-      - name: Desplegar Frontend vía SSM
+      - name: Push image
         run: |
-              AWS_REGION="${{ secrets.AWS_REGION }}"
-              ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
-              ECR_REPO_URL_FRONTEND="${{ secrets.ECR_REPO_URL_FRONTEND }}"
-              EC2_BACKEND_URL="${{ secrets.EC2_BACKEND_URL }}"
-              aws ssm send-command \
-              --instance-ids "${{ secrets.EC2_FRONTEND_INSTANCE_ID }}" \
-               --document-name "AWS-RunShellScript" \
-               --comment "Actualizar tienda-perritos-frontend desde ECR" \
-               --parameters '{
-              "commands":[
-                "set -e",
-                "docker stop tienda-perritos-frontend || true",
-                "docker rm tienda-perritos-frontend || true",
-                "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-                "docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
-                "docker run -d --restart unless-stopped --name tienda-perritos-frontend -p 80:80 -e BACKEND_URL=${{ secrets.EC2_BACKEND_URL }} ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest"
-              ]
-              }' \
-              --output text
+          docker push \
+          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest

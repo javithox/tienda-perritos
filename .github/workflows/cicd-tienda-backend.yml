@@ -1,60 +1,47 @@
-name: CI/CD Tienda Perritos - Backend
+name: Backend CI/CD
 
 on:
   push:
     branches:
       - main
     paths:
-      - "backend/**"
+      - 'backend/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: tienda-perritos-backend
 
 jobs:
-  build-push-deploy-backend:
+  backend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar credenciales AWS
-        uses: aws-actions/configure-aws-credentials@v3
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login en Amazon ECR
+      - name: Login ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build imagen Backend
+      - name: Build backend image
         run: |
-          cd backend
-          docker build -t tienda-perritos-backend:latest .
+          docker build -t $ECR_REPOSITORY ./backend
 
-      - name: Tag imagen Backend
+      - name: Tag image
         run: |
-          docker tag tienda-perritos-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+          docker tag $ECR_REPOSITORY:latest \
+          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
 
-      - name: Push imagen Backend
+      - name: Push image
         run: |
-          docker push tienda-perritos-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
-
-      - name: Desplegar Backend vía SSM
-        run: |
-              AWS_REGION="${{ secrets.AWS_REGION }}"
-              ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
-              EC2_BACKEND_URL="${{ secrets.EC2_BACKEND_URL }}"
-              ECR_REPO_URL_BACKEND="${{ secrets.ECR_REPO_URL_BACKEND }}"
-              --instance-ids "${{ secrets.EC2_BACKEND_INSTANCE_ID }}" \
-              --document-name "AWS-RunShellScript" \
-              --comment "Actualizar tienda-perritos-backend desde ECR" \
-              --parameters '{
-                "commands":[
-                  "set -e",
-                  "docker stop tienda-perritos-backend || true",
-                  "docker rm tienda-perritos-backend || true",
-                  "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-                  "docker pull ${{ secrets.ECR_REPO_URL_BACKEND }}:latest",
-                  "docker run -d --restart unless-stopped --name tienda-perritos-backend -p 3001:3001 -e DB_HOST=${{ secrets.EC2_DB_HOST }} -e DB_USER=alumno -e DB_PASSWORD=alumno123 -e DB_NAME=tienda_perritos -e DB_PORT=3306 ${{ secrets.ECR_REPO_URL_BACKEND }}:latest"
-                ]
-              }' \
-              --output text
+          docker push \
+          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:latest
