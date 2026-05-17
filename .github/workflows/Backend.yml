@@ -59,4 +59,4 @@ jobs:
                 "docker run -d --restart always --name tienda-backend -p 3001:3001 -e DB_HOST='${{ secrets.EC2_DB_HOST }}' -e DB_USER='alumno' -e DB_PASSWORD='alumno123' -e DB_NAME='tienda_perritos' -e DB_PORT='3306' '${{ secrets.ECR_REPO_URL_BACKEND }}':'${{ env.IMAGE_TAG }}'"
               ]
             }' \
-            --output text
+            --output text 

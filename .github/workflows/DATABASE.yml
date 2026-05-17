@@ -60,4 +60,4 @@ jobs:
                 "docker run -d --restart always --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD='admin123' -e MYSQL_DATABASE='tienda_perritos' -e MYSQL_USER='alumno' -e MYSQL_PASSWORD='alumno123' '${{ secrets.ECR_REPO_URL_DB }}':'${{ env.IMAGE_TAG }}'"
               ]
             }' \
-            --output text
+            --output text 
