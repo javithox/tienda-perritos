@@ -1,0 +1,62 @@
+name: CI/CD Tienda Perritos - Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+jobs:
+  build-push-deploy-backend:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_TAG: latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker Backend
+        run: |
+          cd backend
+
+          docker build -t tienda-backend:${IMAGE_TAG} .
+
+          docker tag tienda-backend:${IMAGE_TAG} \
+          ${{ secrets.ECR_REPO_URL_BACKEND }}:${IMAGE_TAG}
+
+      - name: Push ECR Backend
+        run: |
+          docker push \
+          ${{ secrets.ECR_REPO_URL_BACKEND }}:${IMAGE_TAG}
+
+      - name: Deploy Backend EC2 vía SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_BACKEND_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy backend tienda perritos" \
+            --parameters '{
+              "commands":[
+                "set -e",
+                "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin '${{ secrets.ECR_REGISTRY }}'",
+                "docker pull '${{ secrets.ECR_REPO_URL_BACKEND }}':'${{ env.IMAGE_TAG }}'",
+                "docker stop tienda-backend || true",
+                "docker rm tienda-backend || true",
+                "docker image prune -af",
+                "docker run -d --restart always --name tienda-backend -p 3001:3001 -e DB_HOST='${{ secrets.EC2_DB_HOST }}' -e DB_USER='alumno' -e DB_PASSWORD='alumno123' -e DB_NAME='tienda_perritos' -e DB_PORT='3306' '${{ secrets.ECR_REPO_URL_BACKEND }}':'${{ env.IMAGE_TAG }}'"
+              ]
+            }' \
+            --output text
