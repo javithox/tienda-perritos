@@ -1,63 +1,30 @@
-name: CI/CD Tienda Perritos - DB
+name: Database Docker Hub CI
 
 on:
   push:
     branches:
       - main
     paths:
-      - "db/**"
+      - 'database/**'
 
 jobs:
-  build-push-deploy-db:
+  build-and-push:
     runs-on: ubuntu-latest
-
-    env:
-      IMAGE_TAG: latest
 
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Configurar AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build Docker DB
+      - name: Build imagen database
         run: |
-          cd db
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tienda-perritos-db:latest ./database
 
-          docker build -t tienda-db:${IMAGE_TAG} .
-
-          docker tag tienda-db:${IMAGE_TAG} \
-          ${{ secrets.ECR_REPO_URL_DB }}:${IMAGE_TAG}
-
-      - name: Push ECR DB
+      - name: Push imagen database
         run: |
-          docker push \
-          ${{ secrets.ECR_REPO_URL_DB }}:${IMAGE_TAG}
-
-      - name: Deploy DB EC2 vía SSM
-        run: |
-          aws ssm send-command \
-            --instance-ids ${{ secrets.EC2_DB_INSTANCE_ID }} \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploy db tienda perritos" \
-            --parameters '{
-              "commands":[
-                "set -e",
-                "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin '${{ secrets.ECR_REGISTRY }}'",
-                "docker pull '${{ secrets.ECR_REPO_URL_DB }}':'${{ env.IMAGE_TAG }}'",
-                "docker stop tienda-db || true",
-                "docker rm tienda-db || true",
-                "docker image prune -af",
-                "docker volume create dbdata || true",
-                "docker run -d --restart always --name tienda-db -p 3306:3306 -v dbdata:/var/lib/mysql -e MYSQL_ROOT_PASSWORD='admin123' -e MYSQL_DATABASE='tienda_perritos' -e MYSQL_USER='alumno' -e MYSQL_PASSWORD='alumno123' '${{ secrets.ECR_REPO_URL_DB }}':'${{ env.IMAGE_TAG }}'"
-              ]
-            }' \
-            --output text 
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tienda-perritos-db:latest
