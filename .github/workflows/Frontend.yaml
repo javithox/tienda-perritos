@@ -23,8 +23,8 @@ jobs:
 
       - name: Build imagen frontend
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tienda-perritos-frontend:latest ./frontend
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tienda-frontend:latest ./frontend
 
       - name: Push imagen frontend
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tienda-perritos-frontend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/tienda-frontend:latest
