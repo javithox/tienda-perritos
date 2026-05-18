@@ -30,10 +30,9 @@ jobs:
             type=latest
             type=sha
 
-      - name: Build y Push Frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+      - name: Build Frontend
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tienda-frontend:latest ./frontend
+
+      - name: push frontend
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/tienda-frontend:latest
+          
