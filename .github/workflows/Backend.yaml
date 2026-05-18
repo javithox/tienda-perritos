@@ -1,4 +1,4 @@
-name: Backend Tienda Perritos Docker Hub CI
+name: Backend Docker Hub CI
 
 on:
   push:
