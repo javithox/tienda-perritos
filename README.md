@@ -1,2 +1,0 @@
-# tienda-perritos
-tienda-perritos

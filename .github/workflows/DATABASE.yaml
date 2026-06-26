@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'database/**'
+      - 'db/**'
 
 jobs:
   build-and-push:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Build imagen database
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tienda-db:latest ./database
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/tienda-db:latest ./db
 
       - name: Push imagen database
         run: |
