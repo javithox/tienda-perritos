@@ -4,11 +4,11 @@ const mysql = require("mysql2/promise");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-/* ejemplo*/
+
 const {
-  DB_HOST = "10.0.147.127", // Para Docker Desktop (Windows/Mac)
-  DB_USER = "alumno",
-  DB_PASSWORD = "alumno123",
+  DB_HOST = tienda-db, // acá resuelve internamente en eks
+  DB_USER = "root",
+  DB_PASSWORD = "admin123",
   DB_NAME = "tienda_perritos",
   DB_PORT = 3306,
 } = process.env;
@@ -128,9 +128,12 @@ app.delete("/api/productos/:id", async (req, res) => {
   }
 });
 
-// Endpoint de salud
+// Endpoint de salud para Kubernetes
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Backend de tienda de perritos en ejecución." });
+  res.status(200).json({
+    status: "ok",
+    message: "Backend de tienda de perritos en ejecución."
+  });
 });
 
 // Iniciar servidor
