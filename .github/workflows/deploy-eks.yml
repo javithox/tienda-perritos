@@ -26,7 +26,7 @@ jobs:
     - name: Construir, etiquetar y subir la imagen a Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: tu-nombre-de-repositorio-ecr # Cambia esto por el nombre en AWS
+        ECR_REPOSITORY: $ECR_REGISTRY/$ECR_REPOSITORY # Cambia esto por el nombre en AWS
         IMAGE_TAG: latest
       run: |
         # Construye el contenedor Docker usando tu código fuente modificado
