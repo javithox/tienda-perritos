@@ -5,7 +5,7 @@
 // Determinar la URL base de la API según el host
 // frontend/app.js
 
-const API_BASE = "https://k8s-tienda-tiendafr-45eebb8bf0-4210848d1c2bfdd9.elb.us-east-1.amazonaws.com//api/productos";
+const API_BASE = "/api/productos";
 
 // Ejemplo: const API_BASE = "http://172.20.2.254:3001/api/productos";
 
