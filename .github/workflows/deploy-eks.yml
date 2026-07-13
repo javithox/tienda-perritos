@@ -87,6 +87,10 @@ jobs:
         with:
           version: v1.29.0
 
+      - name: Verificar identidad de AWS
+        run: |
+         aws sts get-caller-identity
+
       # ---------- Configurar kubeconfig de EKS ----------
       - name: Configurar kubeconfig para EKS
         env:
